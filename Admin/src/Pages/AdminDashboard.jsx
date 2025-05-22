@@ -1,38 +1,28 @@
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Package,
-  ShoppingCart,
-  Users,
-  TrendingUp,
-  ArrowUp,
-  ArrowDown,
-  AlertTriangle,
-  Star
+  Package, ShoppingCart, Users, TrendingUp,
+  ArrowUp, ArrowDown, AlertTriangle, Star
 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
+  Chart as ChartJS, CategoryScale, LinearScale,
+  PointElement, LineElement, Title, Tooltip, Legend
 } from 'chart.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend
-);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 const AdminDashboard = () => {
+  // Theme setup
+  const [theme, setTheme] = useState(() => localStorage.getItem('adminTheme') || 'light');
+
+  useEffect(() => {
+    document.body.classList.remove('light-theme', 'dark-theme');
+    document.body.classList.add(theme === 'dark' ? 'dark-theme' : 'light-theme');
+    localStorage.setItem('adminTheme', theme);
+  }, [theme]);
+
   const salesData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
     datasets: [
@@ -76,9 +66,12 @@ const AdminDashboard = () => {
     }
   ];
 
+  const cardClass = `card border-0 shadow-sm rounded-3 ${theme === 'dark' ? 'bg-secondary text-white' : ''}`;
+  const listItemClass = theme === 'dark' ? 'list-group-item bg-dark text-white border-light' : 'list-group-item';
+
   return (
-    <div className="container-fluid">
-      <h2 className="fw-bold mb-4">Admin Dashboard</h2>
+    <div className={`container-fluid py-4 ${theme === 'dark' ? 'text-white bg-dark' : ''}`}>
+      <h2 className="fw-bold mb-4">Dashboard</h2>
 
       {/* Stats */}
       <div className="row g-4 mb-4">
@@ -90,7 +83,7 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <div className="card border-0 shadow-sm rounded-3">
+            <div className={cardClass}>
               <div className="card-body">
                 <div className="d-flex justify-content-between align-items-center mb-2">
                   <div className="bg-light rounded-circle p-3">{stat.icon}</div>
@@ -107,11 +100,11 @@ const AdminDashboard = () => {
         ))}
       </div>
 
+      {/* Sales Chart */}
       <div className="row g-4">
-        {/* Sales Chart */}
         <div className="col-lg-8">
           <motion.div
-            className="card border-0 shadow-sm rounded-3"
+            className={cardClass}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -126,7 +119,7 @@ const AdminDashboard = () => {
         {/* Recent Orders */}
         <div className="col-lg-4">
           <motion.div
-            className="card border-0 shadow-sm rounded-3"
+            className={cardClass}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -135,10 +128,10 @@ const AdminDashboard = () => {
               <h5 className="card-title mb-3">Recent Orders</h5>
               <div className="list-group list-group-flush">
                 {[1, 2, 3].map((order) => (
-                  <div key={order} className="list-group-item border-0 px-0">
+                  <div key={order} className={listItemClass}>
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <h6 className="mb-1">Order #{order}23{order}</h6>
+                        <h6 className="mb-1">Order {order}23{order}</h6>
                         <small className="text-muted">2 hours ago</small>
                       </div>
                       <span className="badge bg-success">Completed</span>
@@ -153,9 +146,10 @@ const AdminDashboard = () => {
 
       {/* Additional Widgets */}
       <div className="row g-4 mt-4">
+        {/* Low Stock Alerts */}
         <div className="col-md-6">
           <motion.div
-            className="card border-0 shadow-sm rounded-3"
+            className={cardClass}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
@@ -163,11 +157,11 @@ const AdminDashboard = () => {
             <div className="card-body">
               <h5 className="card-title mb-3"><AlertTriangle size={18} className="me-2" />Low Stock Alerts</h5>
               <ul className="list-group list-group-flush">
-                <li className="list-group-item d-flex justify-content-between">
+                <li className={listItemClass + ' d-flex justify-content-between'}>
                   <span>Wireless Mouse</span>
                   <span className="badge bg-warning text-dark">4 left</span>
                 </li>
-                <li className="list-group-item d-flex justify-content-between">
+                <li className={listItemClass + ' d-flex justify-content-between'}>
                   <span>Bluetooth Speaker</span>
                   <span className="badge bg-warning text-dark">2 left</span>
                 </li>
@@ -176,9 +170,10 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
 
+        {/* Top Selling Products */}
         <div className="col-md-6">
           <motion.div
-            className="card border-0 shadow-sm rounded-3"
+            className={cardClass}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6 }}
@@ -186,11 +181,11 @@ const AdminDashboard = () => {
             <div className="card-body">
               <h5 className="card-title mb-3"><Star size={18} className="me-2" />Top Selling Products</h5>
               <ul className="list-group list-group-flush">
-                <li className="list-group-item d-flex justify-content-between">
+                <li className={listItemClass + ' d-flex justify-content-between'}>
                   <span>iPhone 14 Pro</span>
                   <span>KES 200,000</span>
                 </li>
-                <li className="list-group-item d-flex justify-content-between">
+                <li className={listItemClass + ' d-flex justify-content-between'}>
                   <span>Dell XPS 13</span>
                   <span>KES 150,000</span>
                 </li>
@@ -199,6 +194,29 @@ const AdminDashboard = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Add dark theme styles */}
+      <style>{`
+        body.dark-theme {
+          background-color: #121212;
+          color: #f0f0f0;
+        }
+        body.light-theme {
+          background-color: #fff;
+          color: #212529;
+        }
+        .bg-dark {
+          background-color: #212529 !important;
+        }
+        .bg-secondary {
+          background-color: #343a40 !important;
+        }
+        .list-group-item.bg-dark {
+          background-color: #343a40 !important;
+          color: #f0f0f0 !important;
+          border-color: #495057 !important;
+        }
+      `}</style>
     </div>
   );
 };

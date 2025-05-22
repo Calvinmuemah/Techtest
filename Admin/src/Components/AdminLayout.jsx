@@ -46,7 +46,7 @@ const AdminLayout = () => {
           <div className="d-flex align-items-center justify-content-between mb-4">
             {isSidebarOpen && (
               <div className="text-white">
-                <h5 className="mb-0">ElectroShop</h5>
+                <h5 className="mb-0">TechTest</h5>
                 <small className="text-muted">Admin Panel</small>
               </div>
             )}
@@ -100,7 +100,7 @@ const AdminLayout = () => {
           <Outlet />
         </div>
         <footer className="bg-white text-center py-3 border-top small text-muted">
-          © {new Date().getFullYear()} ElectroShop Admin. All rights reserved.
+          © {new Date().getFullYear()} TechTest Admin. All rights reserved.
         </footer>
       </main>
     </div>

@@ -1,30 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card, Button, Form } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
-
+import { useTheme } from '../Contexts/ThemeContext'; 
 const AdminSettings = () => {
+  const { theme, toggleTheme } = useTheme(); // use global theme
   const [profile, setProfile] = useState({
     name: 'Admin User',
-    email: 'admin@example.com'
+    email: 'admin@example.com',
   });
 
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',
-    confirm: ''
+    confirm: '',
   });
-
-  // Load theme from localStorage or default to 'light'
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('adminTheme') || 'light';
-  });
-
-  // Apply theme class to body and store in localStorage whenever theme changes
-  useEffect(() => {
-    document.body.classList.remove('light-theme', 'dark-theme');
-    document.body.classList.add(theme === 'dark' ? 'dark-theme' : 'light-theme');
-    localStorage.setItem('adminTheme', theme);
-  }, [theme]);
 
   const handleProfileChange = (e) => {
     setProfile({ ...profile, [e.target.name]: e.target.value });
@@ -34,14 +23,9 @@ const AdminSettings = () => {
     setPasswords({ ...passwords, [e.target.name]: e.target.value });
   };
 
-  const handleThemeToggle = () => {
-    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
-
   const handleProfileSubmit = (e) => {
     e.preventDefault();
     alert('Profile updated successfully!');
-    // Connect this to your backend.
   };
 
   const handlePasswordSubmit = (e) => {
@@ -51,7 +35,6 @@ const AdminSettings = () => {
       return;
     }
     alert('Password updated!');
-    // Connect to your backend.
   };
 
   return (
@@ -152,37 +135,11 @@ const AdminSettings = () => {
               id="theme-switch"
               label={`Enable ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
               checked={theme === 'dark'}
-              onChange={handleThemeToggle}
+              onChange={toggleTheme}
             />
           </Form.Group>
         </Card.Body>
       </Card>
-
-      {/* Add some basic styles for dark mode */}
-      <style>{`
-        body.dark-theme {
-          background-color: #121212;
-          color: #f0f0f0;
-        }
-        body.light-theme {
-          background-color: #fff;
-          color: #212529;
-        }
-        .bg-dark {
-          background-color: #212529 !important;
-        }
-        .bg-secondary {
-          background-color: #343a40 !important;
-        }
-        .form-control.bg-dark {
-          background-color: #343a40 !important;
-          color: #f0f0f0 !important;
-          border-color: #495057 !important;
-        }
-        .btn-light {
-          color: #212529;
-        }
-      `}</style>
     </div>
   );
 };

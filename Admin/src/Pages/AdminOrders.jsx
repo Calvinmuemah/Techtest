@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Eye } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { useTheme } from '../Contexts/ThemeContext'; // 🧠 Use ThemeContext
 
 const orders = [
   {
@@ -10,7 +11,7 @@ const orders = [
     date: '2024-03-15',
     total: 24990,
     status: 'Completed',
-    items: 3
+    items: 3,
   },
   {
     id: '2',
@@ -18,7 +19,7 @@ const orders = [
     date: '2024-03-14',
     total: 49900,
     status: 'Processing',
-    items: 2
+    items: 2,
   },
   {
     id: '3',
@@ -26,11 +27,12 @@ const orders = [
     date: '2024-03-14',
     total: 15900,
     status: 'Shipped',
-    items: 1
-  }
+    items: 1,
+  },
 ];
 
 const AdminOrders = () => {
+  const { theme } = useTheme(); // 🌗 Get current theme
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
@@ -47,7 +49,6 @@ const AdminOrders = () => {
     }
   };
 
-  // Filtering logic
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
       order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -60,21 +61,21 @@ const AdminOrders = () => {
   });
 
   return (
-    <div className="container-fluid">
+    <div className={`container-fluid ${theme === 'dark' ? 'bg-dark text-white' : ''}`}>
       <h1 className="fw-bold mb-4">Orders</h1>
 
       {/* Filters */}
-      <div className="card border-0 shadow-sm mb-4">
+      <div className={`card border-0 shadow-sm mb-4 ${theme === 'dark' ? 'bg-secondary text-white' : ''}`}>
         <div className="card-body">
           <div className="row g-3">
             <div className="col-md-6">
               <div className="input-group">
-                <span className="input-group-text bg-white border-end-0">
+                <span className={`input-group-text ${theme === 'dark' ? 'bg-dark text-white border-light' : 'bg-white'}`}>
                   <Search size={20} />
                 </span>
                 <input
                   type="text"
-                  className="form-control border-start-0"
+                  className={`form-control ${theme === 'dark' ? 'bg-dark text-white border-light' : ''}`}
                   placeholder="Search orders..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -83,11 +84,11 @@ const AdminOrders = () => {
             </div>
             <div className="col-md-4">
               <div className="input-group">
-                <span className="input-group-text bg-white border-end-0">
+                <span className={`input-group-text ${theme === 'dark' ? 'bg-dark text-white border-light' : 'bg-white'}`}>
                   <Filter size={20} />
                 </span>
                 <select
-                  className="form-select border-start-0"
+                  className={`form-select ${theme === 'dark' ? 'bg-dark text-white border-light' : ''}`}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -104,13 +105,13 @@ const AdminOrders = () => {
 
       {/* Orders Table */}
       <motion.div
-        className="card border-0 shadow-sm"
+        className={`card border-0 shadow-sm ${theme === 'dark' ? 'bg-secondary text-white' : ''}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="card-body">
           <div className="table-responsive">
-            <table className="table table-hover">
+            <table className={`table table-hover ${theme === 'dark' ? 'table-dark' : ''}`}>
               <thead>
                 <tr>
                   <th>Order ID</th>
@@ -125,11 +126,11 @@ const AdminOrders = () => {
               <tbody>
                 {filteredOrders.map((order) => (
                   <tr key={order.id}>
-                    <td>#{order.id}</td>
+                    <td>{order.id}</td>
                     <td>{order.customer}</td>
                     <td>{new Date(order.date).toLocaleDateString()}</td>
                     <td>{order.items}</td>
-                    <td>₹{order.total.toLocaleString()}</td>
+                    <td>Ksh {order.total.toLocaleString()}</td>
                     <td>
                       <span className={`badge ${getStatusBadgeClass(order.status)}`}>
                         {order.status}
