@@ -20,7 +20,7 @@ const AdminCategories = () => {
   useEffect(() => {
     // Load categories from backend if not in localStorage
     if (!localStorage.getItem('categories')) {
-      fetch('/api/categories')
+      fetch('http://localhost:5000/api/categories')
         .then(res => res.json())
         .then(data => {
           setCategories(data);
@@ -37,7 +37,7 @@ const AdminCategories = () => {
     formData.append('image', newCategory.image);
 
     try {
-      const response = await fetch('/api/categories', {
+      const response = await fetch('http://localhost:5000/api/createCat', {
         method: 'POST',
         body: formData,
       });
@@ -55,7 +55,7 @@ const AdminCategories = () => {
 
   const handleDeleteCategory = async (id) => {
     try {
-      await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+      await fetch(`http://localhost:5000/api/deleteCat/${id}`, { method: 'DELETE' });
       const updated = categories.filter(cat => cat.id !== id);
       setCategories(updated);
       localStorage.setItem('categories', JSON.stringify(updated));
@@ -89,7 +89,7 @@ const AdminCategories = () => {
           >
             <div className={`card border-0 shadow-sm h-100 ${theme === 'dark' ? 'bg-secondary text-white' : ''}`}>
               <img
-                src={category.image}
+                src={category.image?.url}
                 className="card-img-top"
                 alt={category.name}
                 style={{ 
