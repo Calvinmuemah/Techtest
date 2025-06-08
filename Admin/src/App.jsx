@@ -8,7 +8,7 @@ import AdminProducts from './Pages/AdminProducts';
 import AddProduct from './Updates/AddProduct';
 import AddCategory from './Updates/AddCategory';
 import AdminSettings from './Pages/Settings'; // Include if using Settings
-
+// adds
 function App() {
   return (
     <Router>

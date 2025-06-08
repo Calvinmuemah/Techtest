@@ -2,61 +2,57 @@ const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./Config/db');
-// const authRoutes = require('./routes/authAdminRoutes');
-// const protect = require('./middlewares/authAdminMiddleware');
 const nodemailer = require("nodemailer");
-const categoryRoutes = require('./routes/category.routes');
 const path = require('path');
+const fs = require('fs');
+
+// middlewares
+const { errorHandler } = require('./middlewares/error.middleware');
+
+// routes
+const categoryRoutes = require('./routes/categoryRoutes');
+const productRoutes = require('./routes/productsRoutes');
+const uploads = require('./routes/upload');
 
 
 dotenv.config();
 const app = express();
 connectDB();
 
+// Create data directory if it doesn't exist
+const dataDir = path.join(__dirname, '..', 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
 // Middleware
-app.use(express.json()); 
-app.use(cors()); 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use(cors());
+app.use(express.json());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-app.use(cors({
-  origin: "*",
-  // methods: ['GET', 'POST',"PUT", "DELETE"],
-}));
-
-// Setup Nodemailer Transporter
-// const sendResetEmail = async (email, subject, text) => {
-//   let transporter = nodemailer.createTransport({
-//     service: 'Gmail', // or another service
-//     auth: {
-//       user: process.env.EMAIL_USER,
-//       pass: process.env.EMAIL_PASS,
-//     },
-//   });
-
-//   await transporter.sendMail({
-//     from: process.env.EMAIL_USER,
-//     to: email,
-//     subject,
-//     text,
-//   });
-// };
-
+// app.use(cors({
+//   origin: "*",
+// }));
+// Example root route
 app.get("/", (req, res) => {
   res.send("Hello World!");
 });
 
 // Routes
-// app.use('/api/auth', authRoutes);
-// categories
 app.use('/api', categoryRoutes);
+app.use('/api', productRoutes);
+app.use('/api/upload', uploads);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).send('Something broke!');
+  res.status(500).json({ error: 'Something broke!' });
 });
 
-const PORT = process.env.PORT;
+// Custom error middleware
+app.use(errorHandler);
+
+const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

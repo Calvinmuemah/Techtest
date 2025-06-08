@@ -1,95 +1,94 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2 } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useTheme } from '../Contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 const AdminCategories = () => {
   const { theme } = useTheme();
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newCategory, setNewCategory] = useState({
-    name: '',
-    description: '',
-    image: null
-  });
+  const navigate = useNavigate();
+
   const [categories, setCategories] = useState(() => {
     const saved = localStorage.getItem('categories');
-    return saved ? JSON.parse(saved) : [];
+    console.log('Initial categories from localStorage:', saved);
+    try {
+      const parsed = saved ? JSON.parse(saved) : [];
+      console.log('Parsed categories:', parsed);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+      console.error("Failed to parse categories from localStorage", error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    // Load categories from backend if not in localStorage
-    if (!localStorage.getItem('categories')) {
-      fetch('http://localhost:5000/api/categories')
-        .then(res => res.json())
-        .then(data => {
-          setCategories(data);
-          localStorage.setItem('categories', JSON.stringify(data));
-        })
-        .catch(console.error);
-    }
+    console.log('Fetching categories from backend...');
+    fetch('http://localhost:5000/api/getCats')
+      .then(res => {
+        if (!res.ok) {
+          throw new Error(`Server error: ${res.status}`);
+        }
+        return res.json();
+      })
+      .then(data => {
+        console.log('Fetched categories:', data);
+        const catArray = Array.isArray(data) ? data : data.categories || [];
+        setCategories(catArray);
+        localStorage.setItem('categories', JSON.stringify(catArray)); // optional cache
+      })
+      .catch(err => {
+        console.error('Failed to fetch categories:', err);
+        setCategories([]);  // clear categories on error
+      });
   }, []);
 
-  const handleAddCategory = async () => {
-    const formData = new FormData();
-    formData.append('name', newCategory.name);
-    formData.append('description', newCategory.description);
-    formData.append('image', newCategory.image);
-
-    try {
-      const response = await fetch('http://localhost:5000/api/createCat', {
-        method: 'POST',
-        body: formData,
-      });
-
-      const savedCategory = await response.json();
-      const updatedCategories = [...categories, savedCategory];
-      setCategories(updatedCategories);
-      localStorage.setItem('categories', JSON.stringify(updatedCategories));
-      setIsAddModalOpen(false);
-      setNewCategory({ name: '', description: '', image: null });
-    } catch (err) {
-      console.error('Error saving category:', err);
-    }
-  };
-
   const handleDeleteCategory = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this category?')) return;
+
     try {
-      await fetch(`http://localhost:5000/api/deleteCat/${id}`, { method: 'DELETE' });
-      const updated = categories.filter(cat => cat.id !== id);
-      setCategories(updated);
-      localStorage.setItem('categories', JSON.stringify(updated));
+      console.log('Deleting category with id:', id);
+      const response = await fetch(`http://localhost:5000/api/deleteCat/${id}`, { method: 'DELETE' });
+      console.log('Delete response status:', response.status);
+      if (response.ok) {
+        const updated = categories.filter(cat => cat._id !== id);
+        setCategories(updated);
+        localStorage.setItem('categories', JSON.stringify(updated));
+        console.log('Category deleted and state/localStorage updated.');
+      } else {
+        console.error('Failed to delete category:', response.statusText);
+      }
     } catch (err) {
       console.error('Delete failed:', err);
     }
   };
 
+  console.log('Rendering categories:', categories);
+
   return (
-    <div className={theme === 'dark' ? 'bg-dark text-white min-vh-100' : ''}>
+    <div className={theme === 'dark' ? 'bg-dark text-white min-vh-100 p-4' : 'p-4'}>
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1 className="fw-bold mb-0">Categories</h1>
         <button 
-          className={`btn d-flex align-items-center gap-2 ${
-            theme === 'dark' ? 'btn-info text-dark' : 'btn-primary'
-          }`}
-          onClick={() => setIsAddModalOpen(true)}
+          className={`btn btn-primary`}
+          onClick={() => navigate('/addCategories')}
         >
-          <Plus size={20} />
           Add Category
         </button>
       </div>
 
       <div className="row g-4">
-        {categories.map((category) => (
+        {Array.isArray(categories) && categories.map((category) => (
           <motion.div
-            key={category.id}
+            key={category._id}
             className="col-md-6 col-lg-4"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
             <div className={`card border-0 shadow-sm h-100 ${theme === 'dark' ? 'bg-secondary text-white' : ''}`}>
               <img
-                src={category.image?.url}
+                // Prefix backend URL to imageUrl here:
+                src={category.imageUrl ? `http://localhost:5000${category.imageUrl}` : '/placeholder.png'}
                 className="card-img-top"
                 alt={category.name}
                 style={{ 
@@ -108,19 +107,16 @@ const AdminCategories = () => {
                   </div>
                   <div className="d-flex gap-2">
                     <button 
-                      className={`btn btn-sm ${
-                        theme === 'dark' ? 'btn-outline-info text-info' : 'btn-outline-primary'
-                      }`}
+                      className={`btn btn-sm ${theme === 'dark' ? 'btn-outline-info text-info' : 'btn-outline-primary'}`}
                       aria-label={`Edit ${category.name}`}
+                      onClick={() => navigate(`/editCategory/${category._id}`)}
                     >
                       <Edit size={16} />
                     </button>
                     <button 
-                      className={`btn btn-sm ${
-                        theme === 'dark' ? 'btn-outline-danger text-danger' : 'btn-outline-danger'
-                      }`}
+                      className={`btn btn-sm btn-outline-danger`}
                       aria-label={`Delete ${category.name}`}
-                      onClick={() => handleDeleteCategory(category.id)}
+                      onClick={() => handleDeleteCategory(category._id)}
                     >
                       <Trash2 size={16} />
                     </button>
@@ -132,56 +128,6 @@ const AdminCategories = () => {
           </motion.div>
         ))}
       </div>
-
-      {/* Add Category Modal */}
-      {isAddModalOpen && (
-        <div className="modal d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog">
-            <div className={`modal-content ${theme === 'dark' ? 'bg-dark text-white' : ''}`}>
-              <div className="modal-header">
-                <h5 className="modal-title">Add New Category</h5>
-                <button type="button" className="btn-close" onClick={() => setIsAddModalOpen(false)} />
-              </div>
-              <div className="modal-body">
-                <div className="mb-3">
-                  <label className="form-label">Category Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    value={newCategory.name}
-                    onChange={(e) => setNewCategory({ ...newCategory, name: e.target.value })}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Description</label>
-                  <textarea
-                    className="form-control"
-                    rows="2"
-                    value={newCategory.description}
-                    onChange={(e) => setNewCategory({ ...newCategory, description: e.target.value })}
-                  />
-                </div>
-                <div className="mb-3">
-                  <label className="form-label">Upload Image</label>
-                  <input
-                    type="file"
-                    className="form-control"
-                    onChange={(e) => setNewCategory({ ...newCategory, image: e.target.files[0] })}
-                  />
-                </div>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)}>
-                  Cancel
-                </button>
-                <button type="button" className="btn btn-primary" onClick={handleAddCategory}>
-                  Save Category
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

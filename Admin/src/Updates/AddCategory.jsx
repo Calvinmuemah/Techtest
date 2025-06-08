@@ -1,100 +1,122 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';  // Import useNavigate
 
-const AdminHome = () => {
+const AddCategory = () => {
+  const navigate = useNavigate();  // Initialize navigate
+
+  const [form, setForm] = useState({
+    name: '',
+    description: '',
+    imageUrl: '',
+  });
+
+  const [uploading, setUploading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
+
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = async (e) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+
+    const file = e.target.files[0];
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await axios.post('http://localhost:5000/api/upload/image', formData);
+
+      setForm((prev) => ({ ...prev, imageUrl: res.data.imageUrl }));
+    } catch (error) {
+      setError('Image upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+
+    if (!form.name || !form.description) {
+      return setError('Name and description are required.');
+    }
+
+    try {
+      const res = await axios.post('http://localhost:5000/api/createCat', form);
+      setSuccess('Category created successfully!');
+      setForm({ name: '', description: '', imageUrl: '' });
+
+      // Navigate to categories page after successful creation
+      navigate('/categories');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Something went wrong');
+    }
+  };
+
   return (
     <div className="container py-4">
-      <h2 className="mb-4 fw-bold">Admin Dashboard</h2>
+      <h2 className="mb-4 fw-bold">Add New Category</h2>
 
-      {/* Summary Cards */}
-      <div className="row g-4 mb-4">
-        <div className="col-md-3">
-          <div className="card text-white bg-primary shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Total Sales</h5>
-              <p className="card-text">KES 1,200,000</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-white bg-success shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Orders</h5>
-              <p className="card-text">425</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-white bg-warning shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Products</h5>
-              <p className="card-text">88</p>
-            </div>
-          </div>
-        </div>
-        <div className="col-md-3">
-          <div className="card text-white bg-danger shadow-sm">
-            <div className="card-body">
-              <h5 className="card-title">Users</h5>
-              <p className="card-text">120</p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {success && <div className="alert alert-success">{success}</div>}
+      {error && <div className="alert alert-danger">{error}</div>}
 
-      {/* Quick Links */}
-      <div className="mb-4">
-        <h4>Quick Actions</h4>
-        <div className="d-flex flex-wrap gap-3">
-          <Link to="/admin/products" className="btn btn-outline-primary">Manage Products</Link>
-          <Link to="/admin/orders" className="btn btn-outline-success">View Orders</Link>
-          <Link to="/admin/users" className="btn btn-outline-warning">User Management</Link>
-          <Link to="/admin/settings" className="btn btn-outline-secondary">Settings</Link>
+      <form onSubmit={handleSubmit}>
+        <div className="mb-3">
+          <label className="form-label">Category Name</label>
+          <input
+            type="text"
+            className="form-control"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
+            placeholder="Enter category name"
+            required
+          />
         </div>
-      </div>
 
-      {/* Recent Orders Table */}
-      <div>
-        <h4>Recent Orders</h4>
-        <div className="table-responsive">
-          <table className="table table-bordered table-hover mt-2">
-            <thead className="table-light">
-              <tr>
-                <th>Order ID</th>
-                <th>Customer</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>#ORD1234</td>
-                <td>John Mwangi</td>
-                <td>KES 7,800</td>
-                <td><span className="badge bg-success">Delivered</span></td>
-                <td>2025-05-21</td>
-              </tr>
-              <tr>
-                <td>#ORD1233</td>
-                <td>Faith Wambui</td>
-                <td>KES 5,200</td>
-                <td><span className="badge bg-warning text-dark">Pending</span></td>
-                <td>2025-05-20</td>
-              </tr>
-              <tr>
-                <td>#ORD1232</td>
-                <td>Kevin Otieno</td>
-                <td>KES 3,600</td>
-                <td><span className="badge bg-danger">Cancelled</span></td>
-                <td>2025-05-19</td>
-              </tr>
-            </tbody>
-          </table>
+        <div className="mb-3">
+          <label className="form-label">Description</label>
+          <textarea
+            className="form-control"
+            name="description"
+            value={form.description}
+            onChange={handleChange}
+            placeholder="Enter category description"
+            rows="3"
+            required
+          ></textarea>
         </div>
-      </div>
+
+        <div className="mb-3">
+          <label className="form-label">Image (optional)</label>
+          <input
+            type="file"
+            className="form-control"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+          {uploading && <small>Uploading...</small>}
+          {form.imageUrl && (
+            <img
+              src={form.imageUrl}
+              alt="Category"
+              style={{ width: '150px', marginTop: '10px', borderRadius: '5px' }}
+            />
+          )}
+        </div>
+
+        <button type="submit" className="btn btn-primary" disabled={uploading}>
+          {uploading ? 'Creating...' : 'Create Category'}
+        </button>
+      </form>
     </div>
   );
 };
 
-export default AdminHome;
+export default AddCategory;
