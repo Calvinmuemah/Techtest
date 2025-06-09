@@ -9,6 +9,7 @@ import CheckoutPage from './Pages/CheckoutPage';
 import AboutPage from './Pages/AboutPage';
 import ContactPage from './Pages/ContactPage';
 import NotFoundPage from './Pages/NotFoundPage';
+import ProfilePage from './Pages/ProfilePage';
 
 import { CartProvider } from './Contexts/CartContext';  // <-- import your provider
 
@@ -27,6 +28,7 @@ function App() {
             <Route path="/checkout" element={<CheckoutPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </main>

@@ -1,44 +1,40 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Mail, Phone } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useTheme } from '../Contexts/ThemeContext'; // Import your theme context
-
-const customers = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '+1 234-567-8900',
-    orders: 5,
-    totalSpent: 74900,
-    joinDate: '2024-01-15'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane@example.com',
-    phone: '+1 234-567-8901',
-    orders: 3,
-    totalSpent: 45900,
-    joinDate: '2024-02-20'
-  },
-  {
-    id: '3',
-    name: 'Mike Johnson',
-    email: 'mike@example.com',
-    phone: '+1 234-567-8902',
-    orders: 8,
-    totalSpent: 129900,
-    joinDate: '2023-12-10'
-  }
-];
+import { useTheme } from '../Contexts/ThemeContext';
 
 const AdminCustomers = () => {
   const { theme } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
+  const [customers, setCustomers] = useState([]);
 
-  // Filter customers by searchQuery (optional to add)
+  useEffect(() => {
+    const fetchCustomersData = async () => {
+      try {
+        const usersRes = await fetch('http://localhost:5000/api/Users');
+        const users = await usersRes.json();
+
+        const combined = users.map((user, index) => ({
+          serialId: index + 1, // Auto-incremented ID
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone_number || 'N/A',
+          orders: 0,
+          totalSpent: 0,
+          joinDate: user.createdAt || user.joinDate || new Date().toISOString(),
+        }));
+
+        setCustomers(combined);
+      } catch (error) {
+        console.error('Error fetching customer data:', error);
+      }
+    };
+
+    fetchCustomersData();
+  }, []);
+
   const filteredCustomers = customers.filter(customer =>
     customer.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -83,10 +79,10 @@ const AdminCustomers = () => {
                 <div className="d-flex justify-content-between align-items-center mb-3">
                   <h5 className="card-title mb-0">{customer.name}</h5>
                   <span className={`badge ${theme === 'dark' ? 'bg-info text-dark' : 'bg-primary'}`}>
-                    #{customer.id}
+                    {customer.serialId}
                   </span>
                 </div>
-                
+
                 <div className="mb-3">
                   <div className="d-flex align-items-center mb-2">
                     <Mail size={16} className={`${theme === 'dark' ? 'text-light' : 'text-muted'} me-2`} />
@@ -110,16 +106,16 @@ const AdminCustomers = () => {
 
                 <div className="row g-2 mb-3">
                   <div className={`col-6 ${theme === 'dark' ? 'bg-dark' : 'bg-light'} rounded p-2 text-center`}>
-                    <small className={`${theme === 'dark' ? 'text-muted' : 'text-muted'} d-block`}>Orders</small>
+                    <small className="text-muted d-block">Orders</small>
                     <strong>{customer.orders}</strong>
                   </div>
                   <div className={`col-6 ${theme === 'dark' ? 'bg-dark' : 'bg-light'} rounded p-2 text-center`}>
-                    <small className={`${theme === 'dark' ? 'text-muted' : 'text-muted'} d-block`}>Total Spent</small>
-                    <strong>₹{customer.totalSpent.toLocaleString()}</strong>
+                    <small className="text-muted d-block">Total Spent</small>
+                    <strong>Ksh {(customer.totalSpent || 0).toLocaleString()}</strong>
                   </div>
                 </div>
 
-                <div className={`small ${theme === 'dark' ? 'text-muted' : 'text-muted'}`}>
+                <div className="small text-muted">
                   Member since {new Date(customer.joinDate).toLocaleDateString()}
                 </div>
               </div>

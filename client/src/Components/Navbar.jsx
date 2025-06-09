@@ -87,9 +87,16 @@ const Navbar = () => {
               </span>
             )}
           </Link>
-          <button className="btn btn-sm btn-outline-secondary rounded-circle p-2">
+          <Link
+            to="/profile"
+            className="btn btn-sm p-2"
+            title="User Profile"
+            aria-label="User Profile"
+          >
+            <button className="btn btn-sm btn-outline-secondary rounded-circle p-2">
             <User size={20} />
           </button>
+          </Link>
         </div>
 
         {/* Mobile menu icons */}

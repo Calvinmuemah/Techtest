@@ -12,6 +12,9 @@ const { errorHandler } = require('./middlewares/error.middleware');
 // routes
 const categoryRoutes = require('./routes/categoryRoutes');
 const productRoutes = require('./routes/productsRoutes');
+const UserAuthRoutes = require('./routes/user');
+const UserRoutes = require('./routes/userAuth');
+const orderRoutes = require('./routes/orders');
 const uploads = require('./routes/upload');
 
 
@@ -39,8 +42,11 @@ app.get("/", (req, res) => {
 });
 
 // Routes
+app.use('/api', UserAuthRoutes);
+app.use('/api', UserRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
+app.use('/api', orderRoutes);
 app.use('/api/upload', uploads);
 
 // Error Handling Middleware
