@@ -12,7 +12,7 @@ const AdminCustomers = () => {
   useEffect(() => {
     const fetchCustomerOrders = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/customers');
+        const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/customers`);
         const orders = await res.json();
 
         const customerMap = new Map();

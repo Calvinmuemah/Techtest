@@ -24,7 +24,7 @@ const AdminCategories = () => {
 
   useEffect(() => {
     console.log('Fetching categories from backend...');
-    fetch('http://localhost:5000/api/getCats')
+    fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/getCats`)
       .then(res => {
         if (!res.ok) {
           throw new Error(`Server error: ${res.status}`);
@@ -48,7 +48,7 @@ const AdminCategories = () => {
 
     try {
       console.log('Deleting category with id:', id);
-      const response = await fetch(`http://localhost:5000/api/deleteCat/${id}`, { method: 'DELETE' });
+      const response = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/deleteCat/${id}`, { method: 'DELETE' });
       console.log('Delete response status:', response.status);
       if (response.ok) {
         const updated = categories.filter(cat => cat._id !== id);
@@ -88,7 +88,7 @@ const AdminCategories = () => {
             <div className={`card border-0 shadow-sm h-100 ${theme === 'dark' ? 'bg-secondary text-white' : ''}`}>
               <img
                 // Prefix backend URL to imageUrl here:
-                src={category.imageUrl ? `http://localhost:5000${category.imageUrl}` : '/placeholder.png'}
+                src={category.imageUrl ? `${import.meta.env.VITE_API_ENDPOINT}${category.imageUrl}` : '/placeholder.png'}
                 className="card-img-top"
                 alt={category.name}
                 style={{ 

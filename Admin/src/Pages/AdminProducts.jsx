@@ -18,7 +18,7 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch('http://localhost:5000/api/products/all');
+      const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/products/all`);
       if (!res.ok) throw new Error('Failed to fetch products');
       const data = await res.json();
       setProducts(data);
@@ -35,7 +35,7 @@ const AdminProducts = () => {
   const deleteProduct = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_ENDPOINT}/api/products/${id}`, {
         method: 'DELETE',
       });
       if (!res.ok) throw new Error('Failed to delete product');
