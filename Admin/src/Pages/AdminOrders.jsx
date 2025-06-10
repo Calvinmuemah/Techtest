@@ -1,43 +1,36 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Filter, Eye } from 'lucide-react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useTheme } from '../Contexts/ThemeContext'; // 🧠 Use ThemeContext
-
-const orders = [
-  {
-    id: '1',
-    customer: 'John Doe',
-    date: '2024-03-15',
-    total: 24990,
-    status: 'Completed',
-    items: 3,
-  },
-  {
-    id: '2',
-    customer: 'Jane Smith',
-    date: '2024-03-14',
-    total: 49900,
-    status: 'Processing',
-    items: 2,
-  },
-  {
-    id: '3',
-    customer: 'Mike Johnson',
-    date: '2024-03-14',
-    total: 15900,
-    status: 'Shipped',
-    items: 1,
-  },
-];
+import { useTheme } from '../Contexts/ThemeContext';
 
 const AdminOrders = () => {
-  const { theme } = useTheme(); // 🌗 Get current theme
+  const { theme } = useTheme();
+  const [orders, setOrders] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/orders/getAllOrders');
+        if (!response.ok) throw new Error('Failed to fetch orders');
+        const data = await response.json();
+        setOrders(data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
 
   const getStatusBadgeClass = (status) => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'completed':
         return 'bg-success';
       case 'processing':
@@ -51,11 +44,11 @@ const AdminOrders = () => {
 
   const filteredOrders = orders.filter((order) => {
     const matchesSearch =
-      order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      order.id.includes(searchQuery);
+      order.customerName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      order._id?.includes(searchQuery);
 
     const matchesStatus =
-      statusFilter === 'all' || order.status.toLowerCase() === statusFilter;
+      statusFilter === 'all' || order.status?.toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -96,6 +89,7 @@ const AdminOrders = () => {
                   <option value="completed">Completed</option>
                   <option value="processing">Processing</option>
                   <option value="shipped">Shipped</option>
+                  <option value="pending">Pending</option>
                 </select>
               </div>
             </div>
@@ -110,49 +104,58 @@ const AdminOrders = () => {
         animate={{ opacity: 1, y: 0 }}
       >
         <div className="card-body">
-          <div className="table-responsive">
-            <table className={`table table-hover ${theme === 'dark' ? 'table-dark' : ''}`}>
-              <thead>
-                <tr>
-                  <th>Order ID</th>
-                  <th>Customer</th>
-                  <th>Date</th>
-                  <th>Items</th>
-                  <th>Total</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order) => (
-                  <tr key={order.id}>
-                    <td>{order.id}</td>
-                    <td>{order.customer}</td>
-                    <td>{new Date(order.date).toLocaleDateString()}</td>
-                    <td>{order.items}</td>
-                    <td>Ksh {order.total.toLocaleString()}</td>
-                    <td>
-                      <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td>
-                      <button className="btn btn-sm btn-outline-primary">
-                        <Eye size={16} />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredOrders.length === 0 && (
+          {loading ? (
+            <p>Loading orders...</p>
+          ) : error ? (
+            <p className="text-danger">Error: {error}</p>
+          ) : (
+            <div className="table-responsive">
+              <table className={`table table-hover ${theme === 'dark' ? 'table-dark' : ''}`}>
+                <thead>
                   <tr>
-                    <td colSpan="7" className="text-center text-muted">
-                      No orders found.
-                    </td>
+                    <th>No</th>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Date</th>
+                    <th>Items</th>
+                    <th>Total</th>
+                    <th>Status</th>
+                    <th>Actions</th>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredOrders.length > 0 ? (
+                    filteredOrders.map((order, index) => (
+                      <tr key={order._id}>
+                        <td>{index + 1}</td> {/* Auto-incrementing order number */}
+                        <td>{order.customerName}</td>
+                        <td>{order.email}</td>
+                        <td>{new Date(order.createdAt).toLocaleDateString()}</td>
+                        <td>{order.cartItems?.length}</td>
+                        <td>Ksh {order.total?.toLocaleString()}</td>
+                        <td>
+                          <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td>
+                          <button className="btn btn-sm btn-outline-primary">
+                            <Eye size={16} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="8" className="text-center text-muted">
+                        No orders found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>

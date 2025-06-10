@@ -3,7 +3,7 @@ const { getAllUsers, getUsersCount } = require('../Controllers/user.controller.j
 
 const router = express.Router();
 
-router.get('/Users', getAllUsers);
-router.get('/users/count', getUsersCount);
+router.get('/customers', getAllUsers);
+router.get('/customers/count', getUsersCount);
 
 module.exports = router;

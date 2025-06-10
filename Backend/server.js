@@ -46,7 +46,7 @@ app.use('/api', UserAuthRoutes);
 app.use('/api', UserRoutes);
 app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
-app.use('/api', orderRoutes);
+app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploads);
 
 // Error Handling Middleware

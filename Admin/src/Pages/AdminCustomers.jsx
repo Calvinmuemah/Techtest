@@ -10,29 +10,53 @@ const AdminCustomers = () => {
   const [customers, setCustomers] = useState([]);
 
   useEffect(() => {
-    const fetchCustomersData = async () => {
+    const fetchCustomerOrders = async () => {
       try {
-        const usersRes = await fetch('http://localhost:5000/api/Users');
-        const users = await usersRes.json();
+        const res = await fetch('http://localhost:5000/api/customers');
+        const orders = await res.json();
 
-        const combined = users.map((user, index) => ({
-          serialId: index + 1, // Auto-incremented ID
-          id: user._id,
-          name: user.name,
-          email: user.email,
-          phone: user.phone_number || 'N/A',
-          orders: 0,
-          totalSpent: 0,
-          joinDate: user.createdAt || user.joinDate || new Date().toISOString(),
+        const customerMap = new Map();
+
+        orders.forEach((order) => {
+          const email = order.email;
+
+          if (!customerMap.has(email)) {
+            customerMap.set(email, {
+              id: email,
+              name: order.customerName || 'Unnamed',
+              email: order.email,
+              phone: order.phone || 'N/A',
+              address: order.address || '',
+              city: order.city || '',
+              zipCode: order.zipCode || '',
+              country: order.country || '',
+              orders: 1,
+              totalSpent: order.total || 0,
+              joinDate: order.createdAt,
+            });
+          } else {
+            const existing = customerMap.get(email);
+            existing.orders += 1;
+            existing.totalSpent += order.total || 0;
+
+            if (new Date(order.createdAt) < new Date(existing.joinDate)) {
+              existing.joinDate = order.createdAt;
+            }
+          }
+        });
+
+        const combined = Array.from(customerMap.values()).map((customer, index) => ({
+          ...customer,
+          serialId: index + 1,
         }));
 
         setCustomers(combined);
       } catch (error) {
-        console.error('Error fetching customer data:', error);
+        console.error('Error fetching customer orders:', error);
       }
     };
 
-    fetchCustomersData();
+    fetchCustomerOrders();
   }, []);
 
   const filteredCustomers = customers.filter(customer =>
@@ -40,7 +64,7 @@ const AdminCustomers = () => {
   );
 
   return (
-    <div className={`${theme === 'dark' ? 'bg-dark text-white' : ''}`}>
+    <div className={`container-fluid py-4 ${theme === 'dark' ? 'bg-dark text-white' : ''}`}>
       <h1 className="fw-bold mb-4">Customers</h1>
 
       {/* Search */}
@@ -111,7 +135,7 @@ const AdminCustomers = () => {
                   </div>
                   <div className={`col-6 ${theme === 'dark' ? 'bg-dark' : 'bg-light'} rounded p-2 text-center`}>
                     <small className="text-muted d-block">Total Spent</small>
-                    <strong>Ksh {(customer.totalSpent || 0).toLocaleString()}</strong>
+                    <strong>Ksh {customer.totalSpent.toLocaleString()}</strong>
                   </div>
                 </div>
 
