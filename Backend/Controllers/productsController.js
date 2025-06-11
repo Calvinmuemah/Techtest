@@ -1,4 +1,6 @@
 const Product = require('../models/productsModel');
+const Category = require('../models/categoryModel');
+
 
 // Create a new product
 exports.createProduct = async (req, res) => {
@@ -101,5 +103,60 @@ exports.getTopSellingProducts = async (req, res) => {
   } catch (error) {
     console.error("Error fetching top selling products:", error); 
     res.status(500).json({ message: 'Error fetching top selling products', error: error.message });
+  }
+};
+
+
+exports.getProducts = async (req, res) => {
+  try {
+    const { categoryName, search } = req.query;
+
+    let query = {};
+
+    // 1. Filter by Category Name
+    if (categoryName) {
+      const existingCategory = await Category.findOne({ name: { $regex: new RegExp(`^${categoryName}$`, 'i') } });
+
+      if (!existingCategory) {
+        return res.status(200).json([]); 
+      }
+      query.category = existingCategory.name;
+    }
+
+    // 2. Filter by Search Query
+    if (search) {
+      const searchTerm = search;
+      query.$or = [
+        { name: { $regex: searchTerm, $options: 'i' } },
+        { description: { $regex: searchTerm, $options: 'i' } },
+      ];
+    }
+
+    const products = await Product.find(query); 
+
+    res.status(200).json(products);
+  } catch (error) {
+    console.error('Error fetching products:', error);
+    res.status(500).json({ message: 'Server error while fetching products', error: error.message });
+  }
+};
+
+// --- GET Single Product by ID (This remains unchanged and is correct) ---
+exports.getProductById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const product = await Product.findById(id);
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.status(200).json(product);
+  } catch (error) {
+    console.error(`Error fetching product with ID ${req.params.id}:`, error);
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid product ID format' });
+    }
+    res.status(500).json({ message: 'Server error while fetching product', error: error.message });
   }
 };

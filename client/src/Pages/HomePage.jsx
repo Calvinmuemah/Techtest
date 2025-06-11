@@ -8,6 +8,7 @@ import PromoBanner from '../Components/PromoBanner';
 import TestimonialSection from '../Components/TestimonialSection';
 import { getFeaturedProducts, getNewArrivals, getBestsellers } from '../Data/products';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { Link } from 'react-router-dom'; // Import Link from react-router-dom
 
 const HomePage = () => {
   const [categories, setCategories] = useState([]);
@@ -18,12 +19,18 @@ const HomePage = () => {
   const newArrivals = getNewArrivals();
   const bestsellers = getBestsellers();
 
+  const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT;
+
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/getCats');
+        const res = await fetch(`${API_BASE_URL}/api/getCats`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
         const data = await res.json();
-        setCategories(data);
+        const categoryData = Array.isArray(data) ? data : data.categories || [];
+        setCategories(categoryData);
       } catch (err) {
         setError('Failed to load categories.');
         console.error('Error fetching categories:', err);
@@ -33,7 +40,12 @@ const HomePage = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [API_BASE_URL]);
+
+  // --- NEW LOGIC: Filter categories for the homepage display ---
+  const homepageCategories = categories.filter(category =>
+    ['Monitors', 'Phones', 'Laptops', 'Laptop Bags'].includes(category.name)
+  );
 
   return (
     <div>
@@ -48,9 +60,10 @@ const HomePage = () => {
               <p className="text-muted">Find what you need in our extensive product categories</p>
             </div>
             <div className="col-md-4 text-md-end">
-              <a href="/products" className="btn btn-outline-primary d-inline-flex align-items-center">
+              {/* --- UPDATED LINK TO /categories PAGE --- */}
+              <Link to="/categories" className="btn btn-outline-primary d-inline-flex align-items-center">
                 View All Categories <ArrowRight size={16} className="ms-2" />
-              </a>
+              </Link>
             </div>
           </div>
 
@@ -60,34 +73,39 @@ const HomePage = () => {
             <p className="text-danger">{error}</p>
           ) : (
             <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
-              {categories.map((category) => (
-                <div key={category._id} className="col">
-                  <CategoryCard
-                    category={{
-                      id: category._id,
-                      name: category.name,
-                      description: category.description,
-                      image: category.imageUrl,
-                      itemCount: category.itemCount || 0,
-                    }}
-                  />
-                </div>
-              ))}
+              {/* --- Use the filtered homepageCategories here --- */}
+              {homepageCategories.length > 0 ? (
+                homepageCategories.map((category) => (
+                  <div key={category._id} className="col">
+                    <CategoryCard
+                      category={{
+                        id: category._id,
+                        name: category.name,
+                        description: category.description,
+                        image: category.imageUrl ? `${API_BASE_URL}${category.imageUrl}` : '/placeholder.png',
+                        itemCount: category.itemCount || 0,
+                      }}
+                    />
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted">No featured categories found.</p>
+              )}
             </div>
           )}
         </div>
       </section>
 
       {/* Featured Products */}
-      <FeaturedProducts 
-        title="Featured Products" 
-        products={featuredProducts} 
-        viewAllLink="/products" 
+      <FeaturedProducts
+        title="Featured Products"
+        products={featuredProducts}
+        viewAllLink="/products"
       />
 
       {/* Promo Banner 1 */}
-      <PromoBanner 
-        title="Premium Laptops" 
+      <PromoBanner
+        title="Premium Laptops"
         subtitle="Up to 15% off on selected models"
         backgroundImage="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg"
         link="/products/category/1"
@@ -95,15 +113,15 @@ const HomePage = () => {
       />
 
       {/* New Arrivals */}
-      <FeaturedProducts 
-        title="New Arrivals" 
-        products={newArrivals} 
-        viewAllLink="/products?filter=new" 
+      <FeaturedProducts
+        title="New Arrivals"
+        products={newArrivals}
+        viewAllLink="/products?filter=new"
       />
 
       {/* Promo Banner 2 */}
-      <PromoBanner 
-        title="Smart Home Revolution" 
+      <PromoBanner
+        title="Smart Home Revolution"
         subtitle="Transform your living space with cutting-edge appliances"
         backgroundImage="https://images.pexels.com/photos/4049979/pexels-photo-4049979.jpeg"
         link="/products/category/4"
@@ -111,10 +129,10 @@ const HomePage = () => {
       />
 
       {/* Bestsellers */}
-      <FeaturedProducts 
-        title="Bestsellers" 
+      <FeaturedProducts
+        title="Bestsellers"
         products={bestsellers}
-        viewAllLink="/products?filter=bestseller" 
+        viewAllLink="/products?filter=bestseller"
       />
 
       {/* Testimonials */}

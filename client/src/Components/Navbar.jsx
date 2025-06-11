@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react'; // Import useEffect and useRef
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, User, Search, Menu, X } from 'lucide-react';
 import { useCart } from '../Contexts/CartContext';
@@ -10,7 +10,48 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [categories, setCategories] = useState([]); // State to store fetched categories
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false); // State for dropdown
   const navigate = useNavigate();
+
+  // Ref for the category dropdown to detect clicks outside
+  const dropdownRef = useRef(null); 
+
+  const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT; // Assuming this is defined
+
+  // --- Fetch Categories on Component Mount ---
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/getCats`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        const categoryData = Array.isArray(data) ? data : data.categories || [];
+        setCategories(categoryData);
+      } catch (err) {
+        console.error('Failed to fetch categories for navbar dropdown:', err);
+        // Optionally, set an error state here to show a message in the dropdown
+      }
+    };
+
+    fetchCategories();
+  }, [API_BASE_URL]); // Re-fetch if API_BASE_URL changes (unlikely)
+
+  // --- Click outside handler for dropdown ---
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsCategoryDropdownOpen(false); // Close dropdown if clicked outside
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -18,6 +59,12 @@ const Navbar = () => {
       setIsSearchOpen(false);
       navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
     }
+  };
+
+  const handleCategoryClick = (categoryId) => {
+    setIsCategoryDropdownOpen(false); // Close dropdown after clicking a category
+    setIsMobileMenuOpen(false); // Close mobile menu if open
+    navigate(`/products/category/${categoryId}`);
   };
 
   return (
@@ -36,36 +83,68 @@ const Navbar = () => {
             </motion.span>
           </Link>
 
-          <div className={`collapse navbar-collapse ${isMobileMenuOpen ? 'show' : ''}`}>
+          {/* This is the collapsible part for larger screens, controlled by isMobileMenuOpen for smaller screens */}
+          <div className={`collapse navbar-collapse ${isMobileMenuOpen ? 'show' : ''}`} id="navbarNav">
             <ul className="navbar-nav d-flex flex-row gap-3">
               <li className="nav-item">
-                <Link to="/" className="nav-link">Home</Link>
+                <Link to="/" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
               </li>
-              <li className="nav-item dropdown">
+              
+              {/* --- Categories Dropdown (Dynamic) --- */}
+              <li className="nav-item dropdown" ref={dropdownRef}> {/* Attach ref here */}
                 <a
                   className="nav-link dropdown-toggle"
-                  href="#"
+                  href="#" // Keep href="#" but prevent default if using React state
+                  onClick={(e) => {
+                    e.preventDefault(); // Prevent default link behavior
+                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen); // Toggle dropdown state
+                  }}
                   role="button"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
+                  // data-bs-toggle="dropdown" // REMOVE this - handled by React state
+                  aria-expanded={isCategoryDropdownOpen ? "true" : "false"} // Controlled by React state
                 >
                   Categories
                 </a>
-                <ul className="dropdown-menu">
-                  <li><Link to="/products/category/1" className="dropdown-item">Laptops</Link></li>
-                  <li><Link to="/products/category/2" className="dropdown-item">Phones</Link></li>
-                  <li><Link to="/products/category/3" className="dropdown-item">Accessories</Link></li>
-                  <li><Link to="/products/category/4" className="dropdown-item">Home Appliances</Link></li>
+                <ul className={`dropdown-menu ${isCategoryDropdownOpen ? 'show' : ''}`}> {/* Control 'show' class */}
+                  {categories.length > 0 ? (
+                    categories.map(category => (
+                      <li key={category._id}>
+                        <Link 
+                          to={`/products/category/${category._id}`} 
+                          className="dropdown-item"
+                          onClick={() => handleCategoryClick(category._id)} // Close dropdown on click
+                        >
+                          {category.name}
+                        </Link>
+                      </li>
+                    ))
+                  ) : (
+                    <li><span className="dropdown-item text-muted">Loading categories...</span></li>
+                  )}
+                  <li><hr className="dropdown-divider" /></li>
+                  <li>
+                    <Link 
+                      to="/categories" // Link to your AllCategoriesPage
+                      className="dropdown-item"
+                      onClick={() => {
+                        setIsCategoryDropdownOpen(false); // Close dropdown
+                        setIsMobileMenuOpen(false); // Close mobile menu if open
+                      }}
+                    >
+                      View All
+                    </Link>
+                  </li>
                 </ul>
               </li>
+              
               <li className="nav-item">
-                <Link to="/products" className="nav-link">All Products</Link>
+                <Link to="/products" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>All Products</Link>
               </li>
               <li className="nav-item">
-                <Link to="/about" className="nav-link">About</Link>
+                <Link to="/about" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
               </li>
               <li className="nav-item">
-                <Link to="/contact" className="nav-link">Contact</Link>
+                <Link to="/contact" className="nav-link" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
               </li>
             </ul>
           </div>
@@ -124,6 +203,86 @@ const Navbar = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu Overlay (if you have one, ensure it's closed by nav clicks) */}
+      {/* Assuming isMobileMenuOpen state controls this overlay */}
+      {isMobileMenuOpen && (
+        <motion.div
+          className="d-lg-none position-absolute top-0 start-0 w-100 h-100 bg-white shadow-lg p-4 z-4"
+          initial={{ x: '100vw' }}
+          animate={{ x: 0 }}
+          exit={{ x: '100vw' }}
+          transition={{ type: 'tween', duration: 0.3 }}
+          style={{ overflowY: 'auto' }} // Enable scrolling for long menus
+        >
+          <div className="d-flex justify-content-end mb-4">
+            <button
+              className="btn btn-outline-secondary rounded-circle p-2"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <X size={24} />
+            </button>
+          </div>
+          <ul className="nav flex-column gap-3 fs-5">
+            <li className="nav-item">
+              <Link to="/" className="nav-link text-dark" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+            </li>
+            <li className="nav-item dropdown">
+              <a
+                className="nav-link dropdown-toggle text-dark"
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setIsCategoryDropdownOpen(!isCategoryDropdownOpen); // Toggle dropdown
+                }}
+              >
+                Categories
+              </a>
+              <ul className={`list-unstyled ms-3 mt-2 ${isCategoryDropdownOpen ? 'd-block' : 'd-none'}`}> {/* Show/hide dropdown content */}
+                {categories.length > 0 ? (
+                  categories.map(category => (
+                    <li key={category._id} className="mb-2">
+                      <Link 
+                        to={`/products/category/${category._id}`} 
+                        className="text-decoration-none text-muted"
+                        onClick={() => handleCategoryClick(category._id)}
+                      >
+                        {category.name}
+                      </Link>
+                    </li>
+                  ))
+                ) : (
+                  <li><span className="text-muted">Loading...</span></li>
+                )}
+                <li className="mt-2">
+                  <Link 
+                    to="/categories" 
+                    className="text-decoration-none text-primary"
+                    onClick={() => {
+                      setIsCategoryDropdownOpen(false); 
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    View All Categories
+                  </Link>
+                </li>
+              </ul>
+            </li>
+            <li className="nav-item">
+              <Link to="/products" className="nav-link text-dark" onClick={() => setIsMobileMenuOpen(false)}>All Products</Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/about" className="nav-link text-dark" onClick={() => setIsMobileMenuOpen(false)}>About</Link>
+            </li>
+            <li className="nav-item">
+              <Link to="/contact" className="nav-link text-dark" onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+            </li>
+            <li className="nav-item mt-3">
+              <Link to="/profile" className="btn btn-primary w-100" onClick={() => setIsMobileMenuOpen(false)}>My Account</Link>
+            </li>
+          </ul>
+        </motion.div>
+      )}
 
       {/* Search Overlay */}
       <AnimatePresence>

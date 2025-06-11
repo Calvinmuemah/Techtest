@@ -10,6 +10,7 @@ import AboutPage from './Pages/AboutPage';
 import ContactPage from './Pages/ContactPage';
 import NotFoundPage from './Pages/NotFoundPage';
 import ProfilePage from './Pages/ProfilePage';
+import AllCategoriesPage from './Pages/allCategories';
 
 import { CartProvider } from './Contexts/CartContext';  // <-- import your provider
 
@@ -30,6 +31,7 @@ function App() {
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<NotFoundPage />} />
+            <Route path="/categories" element={<AllCategoriesPage />} />
           </Routes>
         </main>
         <Footer />
