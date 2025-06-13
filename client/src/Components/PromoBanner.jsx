@@ -7,7 +7,7 @@ const PromoBanner = ({
   title, 
   subtitle, 
   backgroundImage, 
-  link, 
+  // link, 
   alignment = 'left' 
 }) => {
   return (
@@ -44,7 +44,7 @@ const PromoBanner = ({
           >
             <h2 className="text-white fw-bold display-5 mb-3">{title}</h2>
             <p className="text-white fs-5 mb-4">{subtitle}</p>
-            <Link to={link} className="btn btn-light px-4 py-2">
+            <Link to="/categories" className="btn btn-light px-4 py-2">
               Shop Now
             </Link>
           </motion.div>

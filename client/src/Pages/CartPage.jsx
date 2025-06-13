@@ -4,20 +4,39 @@ import { motion } from 'framer-motion';
 import { Minus, Plus, Trash2, ShoppingBag, ArrowLeft, CreditCard } from 'lucide-react';
 import { useCart } from '../Contexts/CartContext';
 import { formatPrice } from '../Utils/formatters';
-import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CartPage = () => {
   const { cartItems, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
   const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
   const [couponCode, setCouponCode] = useState('');
 
+  // Define API_BASE_URL to correctly construct image paths
+  const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT;
+
   const handleQuantityChange = (productId, newQuantity) => {
-    updateQuantity(productId, newQuantity);
+    // Find the item to get its stock for validation
+    const itemInCart = cartItems.find(item => item.product._id === productId);
+
+    if (itemInCart) {
+      const productStock = itemInCart.product.stock;
+
+      // Ensure newQuantity is at least 1 and does not exceed stock
+      if (newQuantity >= 1 && newQuantity <= productStock) {
+        updateQuantity(productId, newQuantity);
+      } else if (newQuantity < 1) {
+        // Optionally, remove item if quantity goes below 1
+        removeFromCart(productId);
+      } else if (newQuantity > productStock) {
+        alert(`Cannot add more than ${productStock} of this item (max stock).`);
+      }
+    }
   };
 
   // Calculate summary values
   const subtotal = getTotalPrice();
-  const shipping = subtotal > 10000 ? 0 : 299;
+  // Ensure shipping logic is robust, e.g., if subtotal is 0, shipping should also be 0
+  const shipping = subtotal > 0 ? (subtotal > 10000 ? 0 : 299) : 0;
   const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
 
@@ -53,12 +72,18 @@ const CartPage = () => {
               <div className="card-body p-4">
                 {/* Cart items */}
                 {cartItems.map((item, index) => (
-                  <React.Fragment key={item.product.id}>
+                  // Using item.product._id for the key as it's the unique product ID
+                  <React.Fragment key={item.product._id}>
                     <div className="row">
                       <div className="col-md-3 mb-3 mb-md-0">
-                        <Link to={`/product/${item.product.id}`}>
+                        <Link to={`/product/${item.product._id}`}>
                           <img
-                            src={item.product.image}
+                            // CORRECTED: Access product.image or product.images[0] and prepend API_BASE_URL
+                            src={
+                                item.product.images && item.product.images.length > 0
+                                ? `${API_BASE_URL}${item.product.images[0]}`
+                                : (item.product.image ? `${API_BASE_URL}${item.product.image}` : 'placeholder-image-url.jpg') // Fallback
+                            }
                             alt={item.product.name}
                             className="img-fluid rounded"
                             style={{ objectFit: 'cover', height: '120px', width: '100%' }}
@@ -69,19 +94,22 @@ const CartPage = () => {
                         <div className="d-flex justify-content-between align-items-start">
                           <div>
                             <Link
-                              to={`/product/${item.product.id}`}
+                              // CORRECTED: Use item.product._id for the link
+                              to={`/product/${item.product._id}`}
                               className="text-decoration-none"
                             >
                               <h5 className="mb-1">{item.product.name}</h5>
                             </Link>
                             <p className="text-muted small mb-2">
-                              {item.product.category} • {item.product.subCategory || 'General'}
+                              {/* CORRECTED: Access product.category.name if category is an object, else product.category */}
+                              {item.product.category ? (item.product.category.name || item.product.category) : 'Uncategorized'} • {item.product.subCategory || 'General'}
                             </p>
                             <div className="d-flex mt-3">
                               <div className="d-flex align-items-center me-4">
                                 <button
                                   className="btn btn-sm btn-outline-secondary rounded-circle p-1"
-                                  onClick={() => handleQuantityChange(item.product.id, item.quantity - 1)}
+                                  // CORRECTED: Pass item.product._id to handleQuantityChange
+                                  onClick={() => handleQuantityChange(item.product._id, item.quantity - 1)}
                                   disabled={item.quantity <= 1}
                                 >
                                   <Minus size={16} />
@@ -89,7 +117,9 @@ const CartPage = () => {
                                 <span className="mx-3">{item.quantity}</span>
                                 <button
                                   className="btn btn-sm btn-outline-secondary rounded-circle p-1"
-                                  onClick={() => handleQuantityChange(item.product.id, item.quantity + 1)}
+                                  // CORRECTED: Pass item.product._id to handleQuantityChange
+                                  onClick={() => handleQuantityChange(item.product._id, item.quantity + 1)}
+                                  // CORRECTED: Disable if quantity is already at stock limit
                                   disabled={item.quantity >= item.product.stock}
                                 >
                                   <Plus size={16} />
@@ -97,7 +127,8 @@ const CartPage = () => {
                               </div>
                               <button
                                 className="btn btn-sm btn-outline-danger"
-                                onClick={() => removeFromCart(item.product.id)}
+                                // CORRECTED: Pass item.product._id to removeFromCart
+                                onClick={() => removeFromCart(item.product._id)}
                               >
                                 <Trash2 size={16} className="me-1" /> Remove
                               </button>

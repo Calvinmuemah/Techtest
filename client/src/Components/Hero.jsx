@@ -22,7 +22,7 @@ const Hero = () => {
               <Link to="/products" className="btn btn-primary px-4 py-2">
                 Shop Now
               </Link>
-              <Link to="/products/category/1" className="btn btn-outline-light px-4 py-2">
+              <Link to="/categories" className="btn btn-outline-light px-4 py-2">
                 View Deals
               </Link>
             </div>

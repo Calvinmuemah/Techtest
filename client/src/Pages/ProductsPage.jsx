@@ -86,10 +86,11 @@ const ProductsPage = () => {
         // If a search query is present
         else if (searchQuery) {
           // Add search term as a query parameter for backend searching
-          apiUrl = `${API_BASE_URL}/api/products/getProducts?search=${encodeURIComponent(searchQuery)}`;
+          apiUrl = `${API_BASE_URL}/api/products?search=${encodeURIComponent(searchQuery)}`;
         }
         // If neither, apiUrl remains `${API_BASE_URL}/api/products` to get all products.
 
+        // console.log('Fetching products from URL:', apiUrl); // Log the API URL being used
         const res = await fetch(apiUrl);
         if (!res.ok) {
           const errorData = await res.json();
@@ -98,6 +99,19 @@ const ProductsPage = () => {
         const data = await res.json();
         // Ensure the response data is an array (or extract from a 'products' field)
         const productsArray = Array.isArray(data) ? data : data.products || [];
+        
+        // --- IMPORTANT LOG: Check what the backend is returning ---
+        console.log('Fetched Products (raw from backend):', productsArray);
+        if (productsArray.length > 0) {
+            console.log('First product _id from fetched data:', productsArray[0]?._id);
+            if (!productsArray[0]?._id) {
+                console.warn('WARNING: First product in fetched data does NOT have an _id property!', productsArray[0]);
+            }
+        } else {
+            console.log('No products returned from backend.');
+        }
+        // --- END IMPORTANT LOG ---
+
         setAllProducts(productsArray); // Update the raw list of products
       } catch (err) {
         console.error('Error fetching products:', err);
@@ -299,60 +313,85 @@ const ProductsPage = () => {
             viewMode === 'grid' ? (
               // Grid View Layout
               <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-                {filteredProducts.map((product) => (
-                  <div key={product._id} className="col">
-                    <ProductCard product={product} API_BASE_URL={API_BASE_URL} />
-                  </div>
-                ))}
+                {filteredProducts.map((product) => {
+                  // --- IMPORTANT LOG for Grid View: Check product._id before passing to ProductCard ---
+                  // console.log('ProductsPage (Grid View): Product ID for Link:', product?._id, 'Product object:', product);
+                  if (!product?._id) {
+                      // console.warn('ProductsPage (Grid View): A product is missing an _id and will not have a valid link!', product);
+                      // You might choose to skip rendering this product or render a placeholder
+                      return null; 
+                  }
+                  // --- END IMPORTANT LOG ---
+                  return (
+                    <div key={product._id} className="col">
+                      <ProductCard product={product} API_BASE_URL={API_BASE_URL} />
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               // List View Layout
               <div className="d-flex flex-column gap-4">
-                {filteredProducts.map((product) => (
-                  <motion.div
-                    key={product._id}
-                    className="card border-0 shadow-sm"
-                    whileHover={{ y: -5 }}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="row g-0">
-                      <div className="col-md-4">
-                        <img
-                          src={product.image ? `${API_BASE_URL}${product.image}` : '/placeholder.png'}
-                          className="img-fluid rounded-start"
-                          alt={product.name}
-                          style={{ height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <div className="col-md-8">
-                        <div className="card-body">
-                          <h5 className="card-title">{product.name}</h5>
-                          <div className="mb-2">
-                            {/* Star Rating Display */}
-                            {[...Array(5)].map((_, i) => (
-                              <span key={i} className={i < product.rating ? "text-warning" : "text-muted"}>★</span>
-                            ))}
-                            <span className="text-muted ms-1">({product.reviews})</span>
-                          </div>
-                          <p className="card-text">{product.description ? product.description.substring(0, 150) + '...' : 'No description available.'}</p>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <div>
-                              <span className="fs-5 fw-bold text-primary">Ksh {product.price.toLocaleString()}</span>
-                              {product.oldPrice && (
-                                <span className="text-decoration-line-through text-muted ms-2">
-                                  Ksh {product.oldPrice.toLocaleString()}
-                                </span>
-                              )}
+                {filteredProducts.map((product) => {
+                  // --- IMPORTANT LOG for List View: Check product._id before creating the Link ---
+                  // console.log('ProductsPage (List View): Product ID for Link:', product?._id, 'Product object:', product);
+                  if (!product?._id) {
+                      // console.warn('ProductsPage (List View): A product is missing an _id and will not have a valid link!', product);
+                      // You might choose to render a disabled link or skip the item
+                      return (
+                        <div key={`no-id-${Math.random()}`} className="card border-0 shadow-sm p-3 bg-light text-muted">
+                            <p>Product data incomplete for an item. Cannot link.</p>
+                            <p>Name: {product?.name || 'N/A'}</p>
+                        </div>
+                      ); 
+                  }
+                  // --- END IMPORTANT LOG ---
+                  return (
+                    <motion.div
+                      key={product._id}
+                      className="card border-0 shadow-sm"
+                      whileHover={{ y: -5 }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="row g-0">
+                        <div className="col-md-4">
+                          <img
+                            src={product.image ? `${API_BASE_URL}${product.image}` : '/placeholder.png'}
+                            className="img-fluid rounded-start"
+                            alt={product.name}
+                            style={{ height: '100%', objectFit: 'cover' }}
+                          />
+                        </div>
+                        <div className="col-md-8">
+                          <div className="card-body">
+                            <h5 className="card-title">{product.name}</h5>
+                            <div className="mb-2">
+                              {/* Star Rating Display */}
+                              {[...Array(5)].map((_, i) => (
+                                <span key={i} className={i < product.rating ? "text-warning" : "text-muted"}>★</span>
+                              ))}
+                              <span className="text-muted ms-1">({product.reviews})</span>
                             </div>
-                            <Link to={`/product/${product._id}`} className="btn btn-primary">View Details</Link>
+                            <p className="card-text">{product.description ? product.description.substring(0, 150) + '...' : 'No description available.'}</p>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <div>
+                                <span className="fs-5 fw-bold text-primary">Ksh {product.price.toLocaleString()}</span>
+                                {product.oldPrice && (
+                                  <span className="text-decoration-line-through text-muted ms-2">
+                                    Ksh {product.oldPrice.toLocaleString()}
+                                  </span>
+                                )}
+                              </div>
+                              <Link to={`/product/${product._id}`} className="btn btn-primary">View Details</Link>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </div>
             )
           )}

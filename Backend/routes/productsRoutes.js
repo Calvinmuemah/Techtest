@@ -21,6 +21,14 @@ router.get('/products/top-selling', productController.getTopSellingProducts);
 //  get routes by category
 router.get('/products/getProducts', productController.getProducts);
 router.get('/products/getProductById', productController.getProductById);
+
+router.get('/product/getProductDetailsById/:id', productController.getProductDetailsById);
+router.get('/product/getAllProductsDetails', productController.getAllProductsDetails);
+router.get('/product/getFeaturedProducts', productController.getFeaturedProducts);
+router.get('/product/getNewArrivals', productController.getNewArrivals);
+// router.get('/product/getBestsellers', productController.getBestsellers);
+
+
 module.exports = router;
 
 

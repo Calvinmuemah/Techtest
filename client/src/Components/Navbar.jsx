@@ -10,16 +10,15 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [categories, setCategories] = useState([]); // State to store fetched categories
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false); // State for dropdown
+  const [categories, setCategories] = useState([]); 
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false); 
   const navigate = useNavigate();
 
   // Ref for the category dropdown to detect clicks outside
   const dropdownRef = useRef(null); 
 
-  const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT; // Assuming this is defined
+  const API_BASE_URL = import.meta.env.VITE_API_ENDPOINT; 
 
-  // --- Fetch Categories on Component Mount ---
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -32,18 +31,15 @@ const Navbar = () => {
         setCategories(categoryData);
       } catch (err) {
         console.error('Failed to fetch categories for navbar dropdown:', err);
-        // Optionally, set an error state here to show a message in the dropdown
       }
     };
 
     fetchCategories();
-  }, [API_BASE_URL]); // Re-fetch if API_BASE_URL changes (unlikely)
-
-  // --- Click outside handler for dropdown ---
+  }, [API_BASE_URL]); 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsCategoryDropdownOpen(false); // Close dropdown if clicked outside
+        setIsCategoryDropdownOpen(false); 
       }
     };
 
@@ -51,7 +47,7 @@ const Navbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []); // Empty dependency array means this runs once on mount and cleans up on unmount
+  }, []); 
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -62,8 +58,8 @@ const Navbar = () => {
   };
 
   const handleCategoryClick = (categoryId) => {
-    setIsCategoryDropdownOpen(false); // Close dropdown after clicking a category
-    setIsMobileMenuOpen(false); // Close mobile menu if open
+    setIsCategoryDropdownOpen(false); 
+    setIsMobileMenuOpen(false); 
     navigate(`/products/category/${categoryId}`);
   };
 
@@ -94,14 +90,13 @@ const Navbar = () => {
               <li className="nav-item dropdown" ref={dropdownRef}> {/* Attach ref here */}
                 <a
                   className="nav-link dropdown-toggle"
-                  href="#" // Keep href="#" but prevent default if using React state
+                  href="#" 
                   onClick={(e) => {
-                    e.preventDefault(); // Prevent default link behavior
-                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen); // Toggle dropdown state
+                    e.preventDefault(); 
+                    setIsCategoryDropdownOpen(!isCategoryDropdownOpen);
                   }}
                   role="button"
-                  // data-bs-toggle="dropdown" // REMOVE this - handled by React state
-                  aria-expanded={isCategoryDropdownOpen ? "true" : "false"} // Controlled by React state
+                  aria-expanded={isCategoryDropdownOpen ? "true" : "false"}
                 >
                   Categories
                 </a>
@@ -112,7 +107,7 @@ const Navbar = () => {
                         <Link 
                           to={`/products/category/${category._id}`} 
                           className="dropdown-item"
-                          onClick={() => handleCategoryClick(category._id)} // Close dropdown on click
+                          onClick={() => handleCategoryClick(category._id)} 
                         >
                           {category.name}
                         </Link>
@@ -124,11 +119,11 @@ const Navbar = () => {
                   <li><hr className="dropdown-divider" /></li>
                   <li>
                     <Link 
-                      to="/categories" // Link to your AllCategoriesPage
+                      to="/categories"
                       className="dropdown-item"
                       onClick={() => {
-                        setIsCategoryDropdownOpen(false); // Close dropdown
-                        setIsMobileMenuOpen(false); // Close mobile menu if open
+                        setIsCategoryDropdownOpen(false); 
+                        setIsMobileMenuOpen(false);
                       }}
                     >
                       View All

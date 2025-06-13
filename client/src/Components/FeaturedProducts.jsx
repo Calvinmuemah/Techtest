@@ -4,7 +4,8 @@ import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import ProductCard from './ProductCard';
 
-const FeaturedProducts = ({ title, products, viewAllLink }) => {
+// Added loading, error, and API_BASE_URL props
+const FeaturedProducts = ({ title, products, loading, error, viewAllLink, API_BASE_URL }) => {
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -14,6 +15,9 @@ const FeaturedProducts = ({ title, products, viewAllLink }) => {
       }
     }
   };
+
+  // Ensure we only display a maximum of 4 products in this section
+  const productsToDisplay = products ? products.slice(0, 4) : [];
 
   return (
     <section className="py-5">
@@ -26,20 +30,30 @@ const FeaturedProducts = ({ title, products, viewAllLink }) => {
             </Link>
           )}
         </div>
-        
-        <motion.div 
-          className="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4"
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-100px" }}
-        >
-          {products.map((product) => (
-            <div key={product.id} className="col">
-              <ProductCard product={product} />
-            </div>
-          ))}
-        </motion.div>
+
+        {/* Display loading, error, or products */}
+        {loading ? (
+          <p>Loading {title.toLowerCase()}...</p>
+        ) : error ? (
+          <p className="text-danger">{error}</p>
+        ) : productsToDisplay.length > 0 ? (
+          <motion.div
+            className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4"
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: "-100px" }}
+          >
+            {productsToDisplay.map((product) => (
+              // CORRECTED: Key prop placed on the outermost element of the mapped array
+              <div key={product._id} className="col">
+                <ProductCard product={product} API_BASE_URL={API_BASE_URL} /> {/* Pass API_BASE_URL */}
+              </div>
+            ))}
+          </motion.div>
+        ) : (
+          <p className="text-muted">No {title.toLowerCase()} found.</p>
+        )}
       </div>
     </section>
   );
