@@ -16,6 +16,8 @@ const UserAuthRoutes = require('./routes/user');
 const UserRoutes = require('./routes/userAuth');
 const orderRoutes = require('./routes/orders');
 const uploads = require('./routes/upload');
+const callbackRoute = require ("./routes/callback");
+const m_pesa = require ("./routes/mpesa");
 
 
 dotenv.config();
@@ -48,6 +50,10 @@ app.use('/api', categoryRoutes);
 app.use('/api', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/upload', uploads);
+
+// mpesa
+app.use("/api", m_pesa);
+app.use("/api", callbackRoute);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

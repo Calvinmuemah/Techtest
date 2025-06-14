@@ -13,7 +13,7 @@ const CheckoutPage = () => {
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    phone: '', // This phone number is for shipping contact
     address: '',
     city: '',
     zipCode: '',
@@ -25,7 +25,7 @@ const CheckoutPage = () => {
     cardNumber: '',
     expiry: '',
     cvv: '',
-    mpesaPhone: '',
+    mpesaPhone: '', // This is the M-Pesa phone number for payment
   });
 
   // Calculate order total
@@ -65,7 +65,7 @@ const CheckoutPage = () => {
         shipping,
         total,
       };
-      
+
       const response = await fetch('http://localhost:5000/api/orders/orders', {
         method: 'POST',
         headers: {
@@ -95,13 +95,14 @@ const CheckoutPage = () => {
     if (paymentMethod === 'mpesa') {
       // Call backend Mpesa endpoint here to initiate payment
       try {
-        const mpesaResponse = await fetch('http://localhost:5000/api/mpesa/pay', {
+        const mpesaResponse = await fetch('http://localhost:5000/api/stk-push', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            phoneNumber: paymentData.mpesaPhone,
+            // CORRECTED: Changed 'phoneNumber' to 'phone' to match backend
+            phone: paymentData.mpesaPhone, // <-- **THIS IS THE CHANGE**
             amount: total,
             // You can add order details or reference here
           }),
